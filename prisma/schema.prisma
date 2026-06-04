@@ -1,60 +1,75 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+model Usuario {
+  id         String   @id @default(uuid())
+  nombre     String
+  email      String   @unique
+  password   String
+  role       String   @default("ALMACENERO") // "ADMIN" | "ALMACENERO"
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-model Muestras {
-  id             String     @id @default(uuid())
-  nombre         String
-  existencias     Int
-  umbral_minimo  Int
-  created_at     DateTime   @default(now())
-  entregas       Entregas[]
-  logs_inventario Logs_Inventario[]
+  @@map("Usuarios")
 }
 
-model Visitadores {
-  id                 String     @id @default(uuid())
+model Muestra {
+  id             String            @id @default(uuid())
+  nombre         String
+  existencias    Int
+  umbral_minimo  Int
+  created_at     DateTime          @default(now())
+  entregas       Entrega[]
+  logs_inventario LogInventario[]
+
+  @@map("Muestras")
+}
+
+model Visitador {
+  id                 String    @id @default(uuid())
   nombre             String
   zona               String
   muestras_asignadas Int
-  created_at         DateTime   @default(now())
-  entregas           Entregas[]
+  created_at         DateTime  @default(now())
+  entregas           Entrega[]
+
+  @@map("Visitadores")
 }
 
-model Entregas {
-  id               String      @id @default(uuid())
+model Entrega {
+  id               String    @id @default(uuid())
   muestra_id       String
-  muestra          Muestras    @relation(fields: [muestra_id], references: [id])
+  muestra          Muestra   @relation(fields: [muestra_id], references: [id])
   visitador_id     String
-  visitador        Visitadores @relation(fields: [visitador_id], references: [id])
+  visitador        Visitador @relation(fields: [visitador_id], references: [id])
   nombre_visitador String?
   nombre_muestra   String?
   cantidad         Int
-  fecha            DateTime    @db.Date
-  hora             DateTime    @db.Time
+  fecha            DateTime  @db.Date
+  hora             DateTime  @db.Time
   estado           String?
-  created_at       DateTime    @default(now())
+  created_at       DateTime  @default(now())
+
+  @@map("Entregas")
 }
 
-model Logs_Inventario {
+model LogInventario {
   id              String   @id @default(uuid())
-  muestra_id      String
-  muestra         Muestras @relation(fields: [muestra_id], references: [id])
+  muestra_id      String?
+  muestra         Muestra? @relation(fields: [muestra_id], references: [id])
   tipo_movimiento String
   cantidad        Int
   descripcion     String?
   usuario_id      String?
   created_at      DateTime @default(now())
+
+  @@map("Logs_Inventario")
 }
